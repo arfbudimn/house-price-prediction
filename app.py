@@ -20,8 +20,13 @@ def load_from_s3(key, local_path):
     local_path = Path(local_path)
     if not local_path.exists():
         os.makedirs(local_path.parent, exist_ok=True)
-        st.info(f"📥 Downloading {key} from S3…")
-        s3.download_file(S3_BUCKET, key, str(local_path))
+        try:
+            print(f"DEBUG: Attempting to download from Bucket: '{S3_BUCKET}' with Key: '{key}'")
+            s3.download_file(S3_BUCKET, key, str(local_path))
+            print(f"✅ Successfully downloaded {key}")
+        except Exception as e:
+            print(f"❌ ERROR downloading {key}: {e}")
+            raise e
     return str(local_path)
 
 # Paths (ensure available locally by fetching from S3 if missing)
