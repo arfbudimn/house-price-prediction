@@ -32,15 +32,28 @@ def load_from_s3(key, local_path):
 # Paths
 # ----------------------------
 # Downloads model + training features from S3 if not cached.
-MODEL_PATH = Path(load_from_s3("models/xgb_best_model.pkl", "models/xgb_best_model.pkl"))
-TRAIN_FE_PATH = Path(load_from_s3("processed/feature_engineered_train.csv", "data/processed/feature_engineered_train.csv"))
+MODEL_PATH = Path("models/xgb_best_model.pkl")
+TRAIN_FE_PATH = Path("data/processed/feature_engineered_train.csv")
 
-# Load expected training features for alignment
+# Pindahkan eksekusi download ke dalam blok try-except
+# Agar jika S3 timeout/error, aplikasi tetap lanjut ke baris 'app = FastAPI()'
+try:
+    print(f"🔍 Checking S3 artifacts in bucket: {S3_BUCKET}...")
+    load_from_s3("models/xgb_best_model.pkl", str(MODEL_PATH))
+    load_from_s3("processed/feature_engineered_train.csv", str(TRAIN_FE_PATH))
+    print("✅ S3 artifacts synced successfully.")
+except Exception as e:
+    print(f"⚠️ S3 Download Warning: {e}")
+    print("Aplikasi akan tetap berjalan, namun endpoint /predict mungkin akan error sampai file tersedia.")
+
+# Load expected training features hanya jika file ada
+TRAIN_FEATURE_COLUMNS = None
 if TRAIN_FE_PATH.exists():
-    _train_cols = pd.read_csv(TRAIN_FE_PATH, nrows=1)
-    TRAIN_FEATURE_COLUMNS = [c for c in _train_cols.columns if c != "price"]
-else:
-    TRAIN_FEATURE_COLUMNS = None
+    try:
+        _train_cols = pd.read_csv(TRAIN_FE_PATH, nrows=1)
+        TRAIN_FEATURE_COLUMNS = [c for c in _train_cols.columns if c != "price"]
+    except Exception as e:
+        print(f"⚠️ Error reading feature file: {e}")
 
 # ----------------------------
 # App
