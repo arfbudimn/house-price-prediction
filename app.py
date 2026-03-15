@@ -9,9 +9,11 @@ from pathlib import Path
 # ============================
 # Config
 # ============================
-API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000/predict")
+API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000").rstrip("/")
+PREDICT_ENDPOINT = f"{API_URL}/predict"
 S3_BUCKET = os.getenv("S3_BUCKET", "house-price-data-ab")
 REGION = os.getenv("AWS_REGION", "ap-southeast-1")
+
 
 s3 = boto3.client("s3", region_name=REGION)
 
@@ -119,7 +121,7 @@ if st.button("Generate Predictions 🚀", use_container_width=True):
             with st.spinner("Fetching predictions from API..."):
                 # --- B. API CALL (BATCH) ---
                 payload = fe_df.loc[idx_yearly].to_dict(orient="records")
-                resp = requests.post(API_URL, json=payload, timeout=60)
+                resp = requests.post(PREDICT_ENDPOINT, json=payload, timeout=60)
                 resp.raise_for_status()
                 preds = resp.json().get("predictions", [])
 
