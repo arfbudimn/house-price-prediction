@@ -38,9 +38,18 @@
         },
         {
           "name": "API_URL",
-          "value": "housing-main-alb-2023045865.ap-southeast-1.elb.amazonaws.com"
+          "value": "http://housing-main-alb-2023045865.ap-southeast-1.elb.amazonaws.com"
         }
-      ]
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/housing-streamlit",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      }
     }
   ]
 }
